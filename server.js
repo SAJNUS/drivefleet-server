@@ -3,8 +3,10 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
-const { connectDB } = require('./config/db');
 const healthRoutes = require('./routes/healthRoutes');
+const carRoutes = require('./routes/carRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -19,21 +21,14 @@ app.get('/', (req, res) => {
 });
 
 app.use('/health', healthRoutes);
-
-async function startServer() {
-  try {
-    await connectDB();
-    app.listen(port, () => {
-      console.log(`DriveFleet server running on port ${port}`);
-    });
-  } catch (error) {
-    console.error('MongoDB connection failed:', error.message);
-    process.exit(1);
-  }
-}
+app.use('/cars', carRoutes);
+app.use('/bookings', bookingRoutes);
+app.use('/auth', authRoutes);
 
 if (require.main === module) {
-  startServer();
+  app.listen(port, () => {
+    console.log(`DriveFleet server running on port ${port}`);
+  });
 }
 
 module.exports = app;
