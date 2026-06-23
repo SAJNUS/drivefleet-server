@@ -1,23 +1,16 @@
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient } = require("mongodb");
 
 const uri =
-  "mongodb+srv://drivefleet_admin:drivefleet_admin_231102@cluster0.q0d5wz7.mongodb.net/?appName=Cluster0";
-
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
+  "mongodb+srv://drivefleet_admin:Drivefleet2026@cluster0.q0d5wz7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 async function run() {
+  const client = new MongoClient(uri);
+
   try {
     await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log("MongoDB Connected");
-  } catch (error) {
-    console.error(error);
+    console.log("Connected!");
+  } catch (err) {
+    console.error(err);
   } finally {
     await client.close();
   }
