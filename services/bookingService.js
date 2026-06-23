@@ -1,0 +1,60 @@
+const { ObjectId } = require('mongodb');
+
+const { getBookingsCollection } = require('../collections/bookingCollection');
+
+function getBookingIdFilter(id) {
+  if (!ObjectId.isValid(id)) {
+    throw new Error('Invalid booking id');
+  }
+
+  return { _id: new ObjectId(id) };
+}
+
+async function getAllBookings() {
+  try {
+    const bookingsCollection = getBookingsCollection();
+    return await bookingsCollection.find({}).toArray();
+  } catch (error) {
+    throw new Error(`Failed to fetch bookings: ${error.message}`);
+  }
+}
+
+async function getBookingById(id) {
+  try {
+    const bookingsCollection = getBookingsCollection();
+    return await bookingsCollection.findOne(getBookingIdFilter(id));
+  } catch (error) {
+    throw new Error(`Failed to fetch booking by id: ${error.message}`);
+  }
+}
+
+async function createBooking(bookingData) {
+  try {
+    const bookingsCollection = getBookingsCollection();
+    const result = await bookingsCollection.insertOne(bookingData);
+
+    return await bookingsCollection.findOne({ _id: result.insertedId });
+  } catch (error) {
+    throw new Error(`Failed to create booking: ${error.message}`);
+  }
+}
+
+async function deleteBooking(id) {
+  try {
+    const bookingsCollection = getBookingsCollection();
+    const filter = getBookingIdFilter(id);
+
+    const result = await bookingsCollection.deleteOne(filter);
+
+    return result.deletedCount > 0;
+  } catch (error) {
+    throw new Error(`Failed to delete booking: ${error.message}`);
+  }
+}
+
+module.exports = {
+  getAllBookings,
+  getBookingById,
+  createBooking,
+  deleteBooking,
+};
