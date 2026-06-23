@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const { generateToken } = require('../services/authService');
 
 function createJwtMiddleware(req, res, next) {
   const { email, role = 'user' } = req.body;
@@ -10,15 +10,17 @@ function createJwtMiddleware(req, res, next) {
     });
   }
 
-  if (!process.env.JWT_SECRET) {
+  const payload = { email, role };
+  let token;
+
+  try {
+    token = generateToken(payload);
+  } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'JWT secret is not configured',
+      message: error.message,
     });
   }
-
-  const payload = { email, role };
-  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
   res.cookie('token', token, {
     httpOnly: true,
