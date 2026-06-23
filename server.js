@@ -3,6 +3,8 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
+const { connectDB } = require('./config/db');
+
 const healthRoutes = require('./routes/healthRoutes');
 const carRoutes = require('./routes/carRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
@@ -25,10 +27,22 @@ app.use('/cars', carRoutes);
 app.use('/bookings', bookingRoutes);
 app.use('/auth', authRoutes);
 
+async function startServer() {
+  try {
+    await connectDB();
+    console.log('✅ MongoDB Connected');
+
+    app.listen(port, () => {
+      console.log(`🚀 DriveFleet server running on port ${port}`);
+    });
+  } catch (error) {
+    console.error('❌ MongoDB connection failed:', error);
+    process.exit(1);
+  }
+}
+
 if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`DriveFleet server running on port ${port}`);
-  });
+  startServer();
 }
 
 module.exports = app;
