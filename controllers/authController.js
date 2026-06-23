@@ -19,7 +19,26 @@ function getProtected(req, res) {
   });
 }
 
+function getAdminTest(req, res) {
+  return res.status(200).json({
+    success: true,
+    message: 'Admin access granted',
+    user: req.user,
+  });
+}
+
+function getOwnerTest(req, res) {
+  return res.status(200).json({
+    success: true,
+    message: 'Owner access granted',
+    user: req.user,
+    ownerEmail: req.query.ownerEmail,
+  });
+}
+
 module.exports = {
   logout,
   getProtected,
+  getAdminTest,
+  getOwnerTest,
 };

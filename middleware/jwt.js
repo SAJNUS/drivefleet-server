@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 function createJwtMiddleware(req, res, next) {
-  const { email } = req.body;
+  const { email, role = 'user' } = req.body;
 
   if (!email) {
     return res.status(400).json({
@@ -17,7 +17,7 @@ function createJwtMiddleware(req, res, next) {
     });
   }
 
-  const payload = { email };
+  const payload = { email, role };
   const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
   res.cookie('token', token, {
