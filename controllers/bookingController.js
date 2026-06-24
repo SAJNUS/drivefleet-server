@@ -1,5 +1,6 @@
 const {
   getAllBookings,
+  getBookingsByRenter,
   getBookingById: fetchBookingById,
   createBooking: addBooking,
   deleteBooking: removeBooking,
@@ -16,9 +17,15 @@ function handleBookingError(res, error, fallbackMessage) {
   });
 }
 
+// GET /bookings          → all bookings (admin use)
+// GET /bookings?email=x  → bookings for a specific renter
 async function getBookings(req, res) {
   try {
-    const bookings = await getAllBookings();
+    const { email } = req.query;
+
+    const bookings = email
+      ? await getBookingsByRenter(email)
+      : await getAllBookings();
 
     return res.status(200).json({
       success: true,
@@ -54,7 +61,78 @@ async function getBookingById(req, res) {
 
 async function createBooking(req, res) {
   try {
-    const booking = await addBooking(req.body);
+    const {
+      carId,
+      carName,
+      carImage,
+      pickupLocation,
+      ownerEmail,
+      renterEmail,
+      startDate,
+      endDate,
+      totalCost,
+    } = req.body;
+
+    // ── Validation ─────────────────────────────────────────────────────────
+    if (!carId || !renterEmail || !startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'carId, renterEmail, startDate, and endDate are required.',
+        data: null,
+      });
+    }
+
+    if (renterEmail === ownerEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot book your own car.',
+        data: null,
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'startDate and endDate must be valid dates.',
+        data: null,
+      });
+    }
+
+    if (end <= start) {
+      return res.status(400).json({
+        success: false,
+        message: 'Return date must be after the pickup date.',
+        data: null,
+      });
+    }
+
+    if (typeof totalCost !== 'number' || totalCost <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Total cost must be a positive number.',
+        data: null,
+      });
+    }
+
+    // ── Build document ──────────────────────────────────────────────────────
+    const bookingDocument = {
+      carId,
+      carName: carName ?? '',
+      carImage: carImage ?? '',
+      pickupLocation: pickupLocation ?? '',
+      ownerEmail: ownerEmail ?? '',
+      renterEmail,
+      bookingDate: new Date().toISOString(),
+      startDate,
+      endDate,
+      totalCost,
+      bookingStatus: 'Upcoming',
+    };
+
+    const booking = await addBooking(bookingDocument);
 
     return res.status(201).json({
       success: true,
@@ -81,9 +159,7 @@ async function deleteBooking(req, res) {
     return res.status(200).json({
       success: true,
       message: 'Booking deleted successfully',
-      data: {
-        id: req.params.id,
-      },
+      data: { id: req.params.id },
     });
   } catch (error) {
     return handleBookingError(res, error, 'Failed to delete booking');
