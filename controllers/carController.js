@@ -1,5 +1,6 @@
 const {
   getAllCars,
+  getCarsByOwner,
   getCarById: fetchCarById,
   createCar: addCar,
   updateCar: modifyCar,
@@ -19,7 +20,8 @@ function handleCarError(res, error, fallbackMessage) {
 
 async function getCars(req, res) {
   try {
-    const cars = await getAllCars();
+    const { email } = req.query;
+    const cars = email ? await getCarsByOwner(email) : await getAllCars();
 
     return res.status(200).json({
       success: true,

@@ -19,6 +19,15 @@ async function getAllCars() {
   }
 }
 
+async function getCarsByOwner(email) {
+  try {
+    const carsCollection = getCarsCollection();
+    return await carsCollection.find({ ownerEmail: email }).toArray();
+  } catch (error) {
+    throw new Error(`Failed to fetch cars by owner: ${error.message}`);
+  }
+}
+
 async function getCarById(id) {
   try {
     const carsCollection = getCarsCollection();
@@ -71,6 +80,7 @@ async function deleteCar(id) {
 
 module.exports = {
   getAllCars,
+  getCarsByOwner,
   getCarById,
   createCar,
   updateCar,
