@@ -21,6 +21,17 @@ function handleCarError(res, error, fallbackMessage) {
 async function getCars(req, res) {
   try {
     const { email } = req.query;
+
+    if (email) {
+      if (!req.user || req.user.email !== email) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: You can only view your own cars',
+          data: null,
+        });
+      }
+    }
+
     const cars = email ? await getCarsByOwner(email) : await getAllCars();
 
     return res.status(200).json({
@@ -57,6 +68,7 @@ async function getCarById(req, res) {
 
 async function createCar(req, res) {
   try {
+    req.body.ownerEmail = req.user.email;
     const car = await addCar(req.body);
 
     return res.status(201).json({
@@ -71,15 +83,25 @@ async function createCar(req, res) {
 
 async function updateCar(req, res) {
   try {
-    const car = await modifyCar(req.params.id, req.body);
+    const existingCar = await fetchCarById(req.params.id);
 
-    if (!car) {
+    if (!existingCar) {
       return res.status(404).json({
         success: false,
         message: 'Car not found',
         data: null,
       });
     }
+
+    if (existingCar.ownerEmail !== req.user.email) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You can only update your own cars',
+        data: null,
+      });
+    }
+
+    const car = await modifyCar(req.params.id, req.body);
 
     return res.status(200).json({
       success: true,
@@ -93,15 +115,25 @@ async function updateCar(req, res) {
 
 async function deleteCar(req, res) {
   try {
-    const deleted = await removeCar(req.params.id);
+    const existingCar = await fetchCarById(req.params.id);
 
-    if (!deleted) {
+    if (!existingCar) {
       return res.status(404).json({
         success: false,
         message: 'Car not found',
         data: null,
       });
     }
+
+    if (existingCar.ownerEmail !== req.user.email) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You can only delete your own cars',
+        data: null,
+      });
+    }
+
+    const deleted = await removeCar(req.params.id);
 
     return res.status(200).json({
       success: true,

@@ -23,6 +23,16 @@ async function getBookings(req, res) {
   try {
     const { email } = req.query;
 
+    if (email) {
+      if (!req.user || req.user.email !== email) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: You can only view your own bookings',
+          data: null,
+        });
+      }
+    }
+
     const bookings = email
       ? await getBookingsByRenter(email)
       : await getAllBookings();
@@ -124,7 +134,7 @@ async function createBooking(req, res) {
       carImage: carImage ?? '',
       pickupLocation: pickupLocation ?? '',
       ownerEmail: ownerEmail ?? '',
-      renterEmail,
+      renterEmail: req.user.email,
       bookingDate: new Date().toISOString(),
       startDate,
       endDate,
@@ -146,15 +156,25 @@ async function createBooking(req, res) {
 
 async function deleteBooking(req, res) {
   try {
-    const deleted = await removeBooking(req.params.id);
+    const existingBooking = await fetchBookingById(req.params.id);
 
-    if (!deleted) {
+    if (!existingBooking) {
       return res.status(404).json({
         success: false,
         message: 'Booking not found',
         data: null,
       });
     }
+
+    if (existingBooking.renterEmail !== req.user.email) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You can only delete your own bookings',
+        data: null,
+      });
+    }
+
+    const deleted = await removeBooking(req.params.id);
 
     return res.status(200).json({
       success: true,

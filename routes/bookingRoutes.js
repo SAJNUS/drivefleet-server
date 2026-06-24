@@ -6,10 +6,12 @@ const {
   deleteBooking,
 } = require('../controllers/bookingController');
 
+const { verifyFirebaseToken } = require('../middleware/verifyFirebaseToken');
+
 const router = express.Router();
 
-router.get('/', getBookings);
-router.post('/', createBooking);
-router.delete('/:id', deleteBooking);
+router.get('/', verifyFirebaseToken, getBookings);
+router.post('/', verifyFirebaseToken, createBooking);
+router.delete('/:id', verifyFirebaseToken, deleteBooking);
 
 module.exports = router;
