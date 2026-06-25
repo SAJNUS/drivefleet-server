@@ -8,6 +8,11 @@ const {
   deleteBooking: removeBooking,
 } = require('../services/bookingService');
 
+const {
+  getCarById,
+  updateCar,
+} = require('../services/carService');
+
 function handleBookingError(res, error, fallbackMessage) {
   const isInvalidBookingId = error.message.includes('Invalid booking id');
   const statusCode = isInvalidBookingId ? 400 : 500;
@@ -230,6 +235,25 @@ async function completeBooking(req, res) {
         message: 'Booking is already completed',
         data: null,
       });
+    }
+
+    const { rating } = req.body;
+    let newAverageRating = null;
+
+    if (typeof rating === 'number' && rating >= 1 && rating <= 5) {
+      const car = await getCarById(existingBooking.carId);
+      if (car) {
+        const currentRatingCount = car.ratingCount || 0;
+        const currentAverage = car.rating || 0;
+        const newRatingCount = currentRatingCount + 1;
+        const calculatedAverage = ((currentAverage * currentRatingCount) + rating) / newRatingCount;
+        newAverageRating = Math.round(calculatedAverage * 10) / 10;
+
+        await updateCar(existingBooking.carId, {
+          rating: newAverageRating,
+          ratingCount: newRatingCount,
+        });
+      }
     }
 
     const updatedBooking = await modifyBooking(req.params.id, {
