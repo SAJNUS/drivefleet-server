@@ -36,12 +36,12 @@ async function updateProfile(req, res) {
       return res.status(400).json({ success: false, message: 'User email not found in token' });
     }
 
-    const { mobileNumber, location } = req.body;
+    const { displayName, email: newEmail, photoURL } = req.body;
     
-    // Build update object, only updating provided fields
     const updateData = {};
-    if (mobileNumber !== undefined) updateData.mobileNumber = mobileNumber;
-    if (location !== undefined) updateData.location = location;
+    if (displayName !== undefined) updateData.displayName = displayName;
+    if (newEmail !== undefined) updateData.email = newEmail;
+    if (photoURL !== undefined) updateData.photoURL = photoURL;
 
     const updatedProfile = await upsertUserProfile(email, updateData);
 
