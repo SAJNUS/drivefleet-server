@@ -13,6 +13,12 @@ const {
   updateCar,
 } = require('../services/carService');
 
+const {
+  createNotification
+} = require('../services/notificationService');
+
+const { getIO } = require('../config/socket');
+
 function handleBookingError(res, error, fallbackMessage) {
   const isInvalidBookingId = error.message.includes('Invalid booking id');
   const statusCode = isInvalidBookingId ? 400 : 500;
@@ -167,6 +173,17 @@ async function createBooking(req, res) {
 
     const booking = await addBooking(bookingDocument);
 
+    const renterName = req.user.name || 'Someone';
+    const notif = await createNotification({
+      ownerEmail: bookingDocument.ownerEmail,
+      type: 'BOOKING',
+      message: `${renterName} booked your ${bookingDocument.carName}.`,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    });
+
+    getIO().to(bookingDocument.ownerEmail).emit('new_notification', notif);
+
     return res.status(201).json({
       success: true,
       message: 'Booking created successfully',
@@ -198,6 +215,17 @@ async function deleteBooking(req, res) {
     }
 
     const deleted = await removeBooking(req.params.id);
+
+    const renterName = req.user.name || 'Someone';
+    const notif = await createNotification({
+      ownerEmail: existingBooking.ownerEmail,
+      type: 'CANCELLED',
+      message: `${renterName} cancelled the booking for ${existingBooking.carName}.`,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+    });
+
+    getIO().to(existingBooking.ownerEmail).emit('new_notification', notif);
 
     return res.status(200).json({
       success: true,
@@ -259,6 +287,27 @@ async function completeBooking(req, res) {
     const updatedBooking = await modifyBooking(req.params.id, {
       bookingStatus: 'Completed',
     });
+
+    const renterName = req.user.name || 'Someone';
+    const now = new Date().toISOString();
+    
+    const notif1 = await createNotification({
+      ownerEmail: existingBooking.ownerEmail,
+      type: 'COMPLETED',
+      message: `${renterName} completed the trip for ${existingBooking.carName}.`,
+      isRead: false,
+      createdAt: now,
+    });
+    getIO().to(existingBooking.ownerEmail).emit('new_notification', notif1);
+    
+    const notif2 = await createNotification({
+      ownerEmail: existingBooking.ownerEmail,
+      type: 'EARNINGS',
+      message: `BDT ${existingBooking.totalCost.toLocaleString()} has been added to your earnings.`,
+      isRead: false,
+      createdAt: new Date(new Date(now).getTime() + 1).toISOString(),
+    });
+    getIO().to(existingBooking.ownerEmail).emit('new_notification', notif2);
 
     return res.status(200).json({
       success: true,
