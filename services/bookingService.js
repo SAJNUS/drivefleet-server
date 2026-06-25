@@ -51,6 +51,18 @@ async function getBookingsByRenter(email) {
   }
 }
 
+async function getBookingsByOwner(email) {
+  try {
+    const bookingsCollection = getBookingsCollection();
+    return await bookingsCollection
+      .find({ ownerEmail: email })
+      .sort({ bookingDate: -1 })
+      .toArray();
+  } catch (error) {
+    throw new Error(`Failed to fetch bookings by owner: ${error.message}`);
+  }
+}
+
 async function deleteBooking(id) {
   try {
     const bookingsCollection = getBookingsCollection();
@@ -67,6 +79,7 @@ async function deleteBooking(id) {
 module.exports = {
   getAllBookings,
   getBookingsByRenter,
+  getBookingsByOwner,
   getBookingById,
   createBooking,
   deleteBooking,

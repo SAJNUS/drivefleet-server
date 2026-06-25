@@ -1,6 +1,7 @@
 const {
   getAllBookings,
   getBookingsByRenter,
+  getBookingsByOwner,
   getBookingById: fetchBookingById,
   createBooking: addBooking,
   deleteBooking: removeBooking,
@@ -19,9 +20,10 @@ function handleBookingError(res, error, fallbackMessage) {
 
 // GET /bookings          → all bookings (admin use)
 // GET /bookings?email=x  → bookings for a specific renter
+// GET /bookings?ownerEmail=x  → bookings for a specific owner
 async function getBookings(req, res) {
   try {
-    const { email } = req.query;
+    const { email, ownerEmail } = req.query;
 
     if (email) {
       if (!req.user || req.user.email !== email) {
@@ -33,9 +35,24 @@ async function getBookings(req, res) {
       }
     }
 
-    const bookings = email
-      ? await getBookingsByRenter(email)
-      : await getAllBookings();
+    if (ownerEmail) {
+      if (!req.user || req.user.email !== ownerEmail) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: You can only view your own car bookings',
+          data: null,
+        });
+      }
+    }
+
+    let bookings = [];
+    if (email) {
+      bookings = await getBookingsByRenter(email);
+    } else if (ownerEmail) {
+      bookings = await getBookingsByOwner(ownerEmail);
+    } else {
+      bookings = await getAllBookings();
+    }
 
     return res.status(200).json({
       success: true,
