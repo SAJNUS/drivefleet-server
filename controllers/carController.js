@@ -7,6 +7,8 @@ const {
   deleteCar: removeCar,
 } = require('../services/carService');
 
+const { logActivity } = require('../services/activityService');
+
 function handleCarError(res, error, fallbackMessage) {
   const isInvalidCarId = error.message.includes('Invalid car id');
   const statusCode = isInvalidCarId ? 400 : 500;
@@ -71,6 +73,14 @@ async function createCar(req, res) {
     req.body.ownerEmail = req.user.email;
     const car = await addCar(req.body);
 
+    await logActivity({
+      userEmail: req.user.email,
+      type: 'PURPLE',
+      message: `You added ${car.carModel} to your fleet`,
+      relatedCarId: car._id,
+      relatedCarName: car.carModel
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Car created successfully',
@@ -103,6 +113,14 @@ async function updateCar(req, res) {
 
     const car = await modifyCar(req.params.id, req.body);
 
+    await logActivity({
+      userEmail: req.user.email,
+      type: 'ORANGE',
+      message: `You updated ${car.carModel} details`,
+      relatedCarId: car._id,
+      relatedCarName: car.carModel
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Car updated successfully',
@@ -134,6 +152,14 @@ async function deleteCar(req, res) {
     }
 
     const deleted = await removeCar(req.params.id);
+
+    await logActivity({
+      userEmail: req.user.email,
+      type: 'RED',
+      message: `You deleted ${existingCar.carModel}`,
+      relatedCarId: req.params.id,
+      relatedCarName: existingCar.carModel
+    });
 
     return res.status(200).json({
       success: true,

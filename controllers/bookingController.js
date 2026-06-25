@@ -17,6 +17,8 @@ const {
   createNotification
 } = require('../services/notificationService');
 
+const { logActivity } = require('../services/activityService');
+
 const { getIO } = require('../config/socket');
 
 function handleBookingError(res, error, fallbackMessage) {
@@ -188,6 +190,14 @@ async function createBooking(req, res) {
 
     getIO().to(bookingDocument.ownerEmail).emit('new_notification', notif);
 
+    await logActivity({
+      userEmail: req.user.email,
+      type: 'BLUE',
+      message: `You booked ${bookingDocument.carName}`,
+      relatedCarId: bookingDocument.carId,
+      relatedCarName: bookingDocument.carName
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Booking created successfully',
@@ -230,6 +240,14 @@ async function deleteBooking(req, res) {
     });
 
     getIO().to(existingBooking.ownerEmail).emit('new_notification', notif);
+
+    await logActivity({
+      userEmail: req.user.email,
+      type: 'RED',
+      message: `You cancelled your booking for ${existingBooking.carName}`,
+      relatedCarId: existingBooking.carId,
+      relatedCarName: existingBooking.carName
+    });
 
     return res.status(200).json({
       success: true,
@@ -309,9 +327,17 @@ async function completeBooking(req, res) {
       type: 'EARNINGS',
       message: `BDT ${existingBooking.totalCost.toLocaleString()} has been added to your earnings.`,
       isRead: false,
-      createdAt: new Date(new Date(now).getTime() + 1).toISOString(),
+      createdAt: now,
     });
     getIO().to(existingBooking.ownerEmail).emit('new_notification', notif2);
+
+    await logActivity({
+      userEmail: req.user.email,
+      type: 'GREEN',
+      message: `Your trip with ${existingBooking.carName} was completed`,
+      relatedCarId: existingBooking.carId,
+      relatedCarName: existingBooking.carName
+    });
 
     return res.status(200).json({
       success: true,

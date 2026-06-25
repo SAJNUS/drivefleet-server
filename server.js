@@ -12,6 +12,7 @@ const carRoutes = require('./routes/carRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const authRoutes = require('./routes/authRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -33,6 +34,7 @@ app.use('/cars', carRoutes);
 app.use('/bookings', bookingRoutes);
 app.use('/auth', authRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/users', userRoutes);
 
 async function startServer() {
   try {
