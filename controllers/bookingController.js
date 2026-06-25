@@ -110,6 +110,8 @@ async function createBooking(req, res) {
       startDate,
       endDate,
       totalCost,
+      driverNeeded,
+      specialNote,
     } = req.body;
 
     // ── Validation ─────────────────────────────────────────────────────────
@@ -169,6 +171,8 @@ async function createBooking(req, res) {
       endDate,
       totalCost,
       bookingStatus: 'Upcoming',
+      driverNeeded: driverNeeded ?? false,
+      specialNote: specialNote ?? '',
     };
 
     const booking = await addBooking(bookingDocument);
