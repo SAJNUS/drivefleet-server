@@ -1,0 +1,5 @@
+{
+  "message": "Decoding Firebase ID token failed. Make sure you passed the entire string JWT which represents an ID token. See https://firebase.google.com/docs/auth/admin/verify-id-tokens for details on how to retrieve an ID token.",
+  "code": "auth/argument-error",
+  "stack": "Error: Decoding Firebase ID token failed. Make sure you passed the entire string JWT which represents an ID token. See https://firebase.google.com/docs/auth/admin/verify-id-tokens for details on how to retrieve an ID token.\n    at /Users/sajnus/Desktop/drivefleet-server/node_modules/firebase-admin/lib/auth/token-verifier.js:177:23\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)"
+}

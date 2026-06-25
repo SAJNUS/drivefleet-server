@@ -4,6 +4,7 @@ const {
   getBookingsByOwner,
   getBookingById: fetchBookingById,
   createBooking: addBooking,
+  updateBooking: modifyBooking,
   deleteBooking: removeBooking,
 } = require('../services/bookingService');
 
@@ -203,9 +204,52 @@ async function deleteBooking(req, res) {
   }
 }
 
+async function completeBooking(req, res) {
+  try {
+    const existingBooking = await fetchBookingById(req.params.id);
+
+    if (!existingBooking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found',
+        data: null,
+      });
+    }
+
+    if (existingBooking.renterEmail !== req.user.email) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You can only complete your own bookings',
+        data: null,
+      });
+    }
+
+    if (existingBooking.bookingStatus === 'Completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Booking is already completed',
+        data: null,
+      });
+    }
+
+    const updatedBooking = await modifyBooking(req.params.id, {
+      bookingStatus: 'Completed',
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Booking completed successfully',
+      data: updatedBooking,
+    });
+  } catch (error) {
+    return handleBookingError(res, error, 'Failed to complete booking');
+  }
+}
+
 module.exports = {
   getBookings,
   getBookingById,
   createBooking,
+  completeBooking,
   deleteBooking,
 };

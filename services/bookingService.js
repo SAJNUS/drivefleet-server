@@ -76,11 +76,29 @@ async function deleteBooking(id) {
   }
 }
 
+async function updateBooking(id, updatedData) {
+  try {
+    const bookingsCollection = getBookingsCollection();
+    const filter = getBookingIdFilter(id);
+
+    const result = await bookingsCollection.updateOne(filter, { $set: updatedData });
+
+    if (result.matchedCount === 0) {
+      return null;
+    }
+
+    return await bookingsCollection.findOne(filter);
+  } catch (error) {
+    throw new Error(`Failed to update booking: ${error.message}`);
+  }
+}
+
 module.exports = {
   getAllBookings,
   getBookingsByRenter,
   getBookingsByOwner,
   getBookingById,
   createBooking,
+  updateBooking,
   deleteBooking,
 };
