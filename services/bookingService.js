@@ -3,7 +3,7 @@ const { ObjectId } = require('mongodb');
 const { getBookingsCollection } = require('../collections/bookingCollection');
 
 function mapBookingStatus(booking) {
-  if (!booking || booking.bookingStatus === 'Cancelled') return booking;
+  if (!booking || booking.bookingStatus === 'Cancelled' || booking.bookingStatus === 'Completed') return booking;
 
   const today = new Date().toISOString().split('T')[0];
   if (today > booking.endDate) {

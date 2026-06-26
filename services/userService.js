@@ -40,7 +40,10 @@ async function getUserStats(email) {
         $match: { 
           ownerEmail: email, 
           bookingStatus: { $ne: 'Cancelled' },
-          endDate: { $lt: today }
+          $or: [
+            { bookingStatus: 'Completed' },
+            { endDate: { $lt: today } }
+          ]
         } 
       },
       { $group: { _id: null, total: { $sum: '$totalCost' } } }
@@ -48,7 +51,16 @@ async function getUserStats(email) {
     const totalEarnings = earningsResult.length > 0 ? earningsResult[0].total : 0;
 
     const spentResult = await bookingsCollection.aggregate([
-      { $match: { renterEmail: email } },
+      { 
+        $match: { 
+          renterEmail: email, 
+          bookingStatus: { $ne: 'Cancelled' },
+          $or: [
+            { bookingStatus: 'Completed' },
+            { endDate: { $lt: today } }
+          ]
+        } 
+      },
       { $group: { _id: null, total: { $sum: '$totalCost' } } }
     ]).toArray();
     const totalSpent = spentResult.length > 0 ? spentResult[0].total : 0;
