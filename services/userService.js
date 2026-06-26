@@ -34,8 +34,15 @@ async function getUserStats(email) {
     const totalCars = await carsCollection.countDocuments({ ownerEmail: email });
     const totalBookings = await bookingsCollection.countDocuments({ renterEmail: email });
 
+    const today = new Date().toISOString().split('T')[0];
     const earningsResult = await bookingsCollection.aggregate([
-      { $match: { ownerEmail: email, bookingStatus: 'Completed' } },
+      { 
+        $match: { 
+          ownerEmail: email, 
+          bookingStatus: { $ne: 'Cancelled' },
+          endDate: { $lt: today }
+        } 
+      },
       { $group: { _id: null, total: { $sum: '$totalCost' } } }
     ]).toArray();
     const totalEarnings = earningsResult.length > 0 ? earningsResult[0].total : 0;
