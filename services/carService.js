@@ -10,19 +10,30 @@ function getCarIdFilter(id) {
   return { _id: new ObjectId(id) };
 }
 
-async function getAllCars() {
+async function getAllCars(searchQuery = '') {
   try {
     const carsCollection = getCarsCollection();
-    return await carsCollection.find({}).toArray();
+    let query = {};
+    if (searchQuery) {
+      query = { carName: { $regex: searchQuery, $options: 'i' } };
+    }
+    return await carsCollection.find(query).toArray();
   } catch (error) {
     throw new Error(`Failed to fetch cars: ${error.message}`);
   }
 }
 
-async function getCarsByOwner(email) {
+async function getCarsByOwner(email, searchQuery = '') {
   try {
     const carsCollection = getCarsCollection();
-    return await carsCollection.find({ ownerEmail: email }).toArray();
+    let query = { ownerEmail: email };
+    if (searchQuery) {
+      query.$or = [
+        { carName: { $regex: searchQuery, $options: 'i' } },
+        { carType: { $regex: searchQuery, $options: 'i' } }
+      ];
+    }
+    return await carsCollection.find(query).toArray();
   } catch (error) {
     throw new Error(`Failed to fetch cars by owner: ${error.message}`);
   }
@@ -78,6 +89,29 @@ async function deleteCar(id) {
   }
 }
 
+async function incrementCarBookingCount(id) {
+  try {
+    const carsCollection = getCarsCollection();
+    const filter = getCarIdFilter(id);
+
+    console.log(`[DEBUG] incrementCarBookingCount called with carId: ${id}`);
+    console.log(`[DEBUG] Target filter:`, filter);
+
+    const result = await carsCollection.findOneAndUpdate(
+      filter,
+      { $inc: { bookingCount: 1 } },
+      { returnDocument: 'after' }
+    );
+    
+    console.log(`[DEBUG] Update result (findOneAndUpdate):`, result);
+    
+    return result;
+  } catch (error) {
+    console.error(`[ERROR] Failed to increment car booking count:`, error);
+    throw new Error(`Failed to increment car booking count: ${error.message}`);
+  }
+}
+
 module.exports = {
   getAllCars,
   getCarsByOwner,
@@ -85,4 +119,5 @@ module.exports = {
   createCar,
   updateCar,
   deleteCar,
+  incrementCarBookingCount,
 };

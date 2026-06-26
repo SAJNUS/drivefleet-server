@@ -11,6 +11,7 @@ const {
 const {
   getCarById,
   updateCar,
+  incrementCarBookingCount,
 } = require('../services/carService');
 
 const {
@@ -178,6 +179,7 @@ async function createBooking(req, res) {
     };
 
     const booking = await addBooking(bookingDocument);
+    await incrementCarBookingCount(bookingDocument.carId);
 
     const renterName = req.user.name || 'Someone';
     const notif = await createNotification({

@@ -22,7 +22,7 @@ function handleCarError(res, error, fallbackMessage) {
 
 async function getCars(req, res) {
   try {
-    const { email } = req.query;
+    const { email, search } = req.query;
 
     if (email) {
       if (!req.user || req.user.email !== email) {
@@ -34,7 +34,7 @@ async function getCars(req, res) {
       }
     }
 
-    const cars = email ? await getCarsByOwner(email) : await getAllCars();
+    const cars = email ? await getCarsByOwner(email, search) : await getAllCars(search);
 
     return res.status(200).json({
       success: true,
