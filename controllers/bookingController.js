@@ -228,7 +228,7 @@ async function deleteBooking(req, res) {
       });
     }
 
-    const deleted = await removeBooking(req.params.id);
+    const deleted = await modifyBooking(req.params.id, { bookingStatus: 'Cancelled' });
 
     const renterName = req.user.name || 'Someone';
     const notif = await createNotification({
